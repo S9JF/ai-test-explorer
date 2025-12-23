@@ -37,4 +37,5 @@ reports/
 # Temporary
 *.tmp
 *.bak
-*~
+*~auth.yaml
+auth.yaml

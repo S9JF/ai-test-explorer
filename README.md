@@ -2,7 +2,7 @@
 
 > **Generación automática de tests de Playwright con exploración real de páginas usando Claude AI + MCP**
 
-Sistema inteligente que explora páginas web automáticamente, extrae selectores reales, y genera tests de Playwright con auto-healing incorporado.
+Sistema inteligente que explora páginas web automáticamente, extrae selectores reales, y genera tests de Playwright con auto-healing incorporado. Incluye exploración autenticada para páginas protegidas y modo interactivo conversacional.
 
 [![Python](https://img.shields.io/badge/Python-3.13+-blue.svg)](https://www.python.org/)
 [![Playwright](https://img.shields.io/badge/Playwright-1.49+-green.svg)](https://playwright.dev/)
@@ -18,10 +18,17 @@ Sistema inteligente que explora páginas web automáticamente, extrae selectores
 - Identifica IDs, nombres, tipos y atributos **reales**
 - Sin adivinanzas - solo selectores verificados
 
+### 🔐 **Exploración Autenticada**
+- Explora páginas que requieren login
+- Configuración de credenciales en `auth.yaml`
+- Auto-detección de sitios
+- Soporte para múltiples aplicaciones
+
 ### 🤖 **Generación Inteligente**
 - Claude analiza la estructura de la página
 - Genera tests con selectores **correctos desde el inicio**
-- Suite completa o tests específicos según necesites
+- **Modo automático:** Suite completa de 2-5 tests
+- **Modo interactivo:** Conversación con Claude sobre qué testear
 - Código limpio con type hints y documentación
 
 ### 🔧 **Auto-Healing**
@@ -29,11 +36,13 @@ Sistema inteligente que explora páginas web automáticamente, extrae selectores
 - Re-explora la página automáticamente
 - Actualiza tests con nuevos selectores
 - Crea backups antes de modificar
+- Preview de cambios con `--dry-run`
 
 ### 💻 **CLI Profesional**
-- 6 comandos intuitivos
+- 8 comandos intuitivos
 - Preview de cambios (--dry-run)
 - Batch processing para múltiples URLs
+- Manejo inteligente de archivos duplicados
 - Validación de elementos interactivos
 
 ---
@@ -68,12 +77,31 @@ echo "ANTHROPIC_API_KEY=tu_api_key_aqui" > .env
 
 ## 📖 Uso
 
-### 1. Explorar una Página
+### 🎮 Comandos Disponibles
 ```bash
-# Exploración básica
+python cli.py --help
+
+Commands:
+  explore       🔍 Explora una página web
+  explore-auth  🔐 Explora página con autenticación
+  generate      🤖 Genera test básico
+  generate-auth 🤖🔐 Genera test con autenticación
+  batch         📦 Genera múltiples tests
+  heal          🔧 Repara test roto (auto-healing)
+  list          📋 Lista tests generados
+  run           ▶️  Ejecuta tests
+```
+
+---
+
+### 1️⃣ Explorar Páginas
+
+#### **Exploración Básica (páginas públicas)**
+```bash
+# Exploración simple
 python cli.py explore https://www.saucedemo.com
 
-# Con detalles
+# Con detalles de elementos
 python cli.py explore https://www.saucedemo.com --show-details
 ```
 
@@ -83,16 +111,53 @@ python cli.py explore https://www.saucedemo.com --show-details
    • 2 inputs
    • 1 botones
    • 5 links
+
+🔹 INPUTS:
+   1. type=text, id=user-name, name=user-name
+   2. type=password, id=password, name=password
 ```
 
 ---
 
-### 2. Generar Tests
+#### **Exploración con Autenticación (páginas protegidas)** 🔐
+
+**Para páginas que requieren login:**
+
+**Paso 1:** Configurar credenciales en `auth.yaml`
+```yaml
+mi-app:
+  login_url: https://mi-app.com/login
+  username: testuser
+  password: testpass
+  username_selector: "#email"
+  password_selector: "#password"
+  submit_selector: "button[type='submit']"
+```
+
+**Paso 2:** Explorar página autenticada
 ```bash
-# Suite completa (2-5 tests)
+python cli.py explore-auth https://mi-app.com/dashboard -s mi-app
+```
+
+**Qué hace:**
+```
+1. ✅ Navega a login
+2. ✅ Ingresa credenciales automáticamente
+3. ✅ Hace login
+4. ✅ Navega a la página objetivo
+5. ✅ Explora elementos del dashboard (NO del login)
+```
+
+---
+
+### 2️⃣ Generar Tests
+
+#### **Tests Básicos**
+```bash
+# Suite completa (2-5 tests automáticos)
 python cli.py generate https://www.saucedemo.com
 
-# Test específico
+# Test específico con descripción
 python cli.py generate https://www.saucedemo.com \
     --description "login con credenciales válidas"
 
@@ -110,6 +175,8 @@ from playwright.async_api import Page
 
 @pytest.mark.asyncio
 async def test_login(page: Page):
+    '''Test de login con credenciales válidas'''
+    
     await page.goto("https://www.saucedemo.com")
     
     # Selectores REALES extraídos de la página
@@ -123,31 +190,172 @@ async def test_login(page: Page):
 
 ---
 
-### 3. Batch Processing
+#### **Tests con Autenticación** 🔐
+
+**Para páginas que requieren login (dashboard, perfil, etc):**
+
+**Modo Automático:**
+```bash
+python cli.py generate-auth https://mi-app.com/dashboard -s mi-app
+```
+
+**Claude:**
+- Hace login automáticamente
+- Explora el dashboard
+- Identifica acciones principales
+- Genera 2-4 tests de flows comunes
+
+---
+
+**Modo Interactivo (conversación con Claude):**
+```bash
+python cli.py generate-auth https://mi-app.com/dashboard -s mi-app --interactive
+```
+
+**Conversación:**
+```
+💬 MODO INTERACTIVO
+
+Elementos encontrados en la página:
+  • 3 inputs
+  • 5 botones
+
+Botones principales:
+  1. Exportar Reporte
+  2. Crear Nuevo
+  3. Filtrar Datos
+
+💡 ¿Qué quieres testear? (describe en una frase)
+Tú: exportar reporte con fechas personalizadas
+
+🤖 Generando test específico...
+✅ Test generado
+```
+
+**Test generado incluye:**
+```python
+@pytest.mark.asyncio
+async def test_exportar_reporte_fechas_personalizadas(page: Page):
+    # PASO 1: Login
+    await page.goto("https://mi-app.com/login")
+    await page.fill("#email", "testuser")
+    await page.fill("#password", "testpass")
+    await page.click("button[type='submit']")
+    
+    # PASO 2: Navegar a dashboard
+    await page.goto("https://mi-app.com/dashboard")
+    
+    # PASO 3: Exportar reporte
+    await page.fill("#fecha-inicio", "2024-01-01")
+    await page.fill("#fecha-fin", "2024-12-31")
+    await page.click("#exportar-btn")
+    
+    # PASO 4: Verificar descarga
+    # ... verificaciones ...
+```
+
+---
+
+**Manejo Inteligente de Archivos:**
+
+Si el archivo ya existe, el sistema pregunta:
+```
+⚠️  El archivo test_dashboard_auth.py ya existe
+
+¿Qué quieres hacer?
+  1. Sobrescribir (se creará backup: test_dashboard_auth.py.backup)
+  2. Crear nuevo (test_dashboard_auth_2.py)
+  3. Cancelar
+
+Opción [1/2/3]:
+```
+
+---
+
+### 3️⃣ Batch Processing
+
+**Generar tests para múltiples URLs:**
 ```bash
 # Crear archivo de URLs
 cat > urls.txt << EOF
 https://www.saucedemo.com
 https://example.com
-https://www.otra-pagina.com
+https://mi-app.com/features
 EOF
 
 # Generar tests para todas
 python cli.py batch urls.txt
 ```
 
+**Salida:**
+```
+📋 Se encontraron 3 URLs
+
+[1/3] Procesando: https://www.saucedemo.com
+   ✅ Guardado en: tests/test_saucedemo_com_generated.py
+
+[2/3] Procesando: https://example.com
+   ⚠️  Advertencia: Test muy simple
+   ✅ Guardado en: tests/test_example_com_generated.py
+
+[3/3] Procesando: https://mi-app.com/features
+   ✅ Guardado en: tests/test_mi_app_com_features_generated.py
+
+✅ Exitosos: 3/3
+```
+
 ---
 
-### 4. Auto-Healing
-```bash
-# Preview de cambios (recomendado primero)
-python cli.py heal tests/test_login.py --dry-run
+### 4️⃣ Auto-Healing 🔧
 
-# Aplicar reparación
+**Cuando los selectores cambian (después de un deploy):**
+
+**Preview de cambios (recomendado primero):**
+```bash
+python cli.py heal tests/test_login.py --dry-run
+```
+
+**Salida:**
+```
+============================================================
+   📋 ANÁLISIS DE CAMBIOS
+============================================================
+
+⚠️  SE DETECTARON CAMBIOS EN SELECTORES:
+
+🔴 REMOVIDOS:
+   • #username-field
+   • #pass
+   • #submit-btn
+
+🟢 AGREGADOS:
+   • #user-name
+   • #password
+   • #login-button
+
+🔍 DRY RUN - No se aplicaron cambios
+
+💾 Para aplicar cambios, ejecuta:
+   python cli.py heal tests/test_login.py
+```
+
+**Aplicar reparación:**
+```bash
 python cli.py heal tests/test_login.py
 ```
 
-**Cuándo usar:**
+**Resultado:**
+```
+✅ CONFIRMADO: Test necesita reparación
+
+💾 Backup creado: tests/test_login.py.backup
+✅ Test reparado: tests/test_login.py
+
+💡 Para ejecutar:
+   python -m pytest tests/test_login.py -v
+```
+
+**Cuándo usar auto-healing:**
 - ✅ Después de un deploy (selectores cambiaron)
 - ✅ Tests fallando por timeout de selectores
 - ✅ Refactoring de frontend
@@ -155,15 +363,43 @@ python cli.py heal tests/test_login.py
 
 ---
 
-### 5. Listar y Ejecutar Tests
-```bash
-# Listar todos los tests generados
-python cli.py list
+### 5️⃣ Listar y Ejecutar Tests
 
-# Ejecutar todos
+**Listar todos los tests generados:**
+```bash
+python cli.py list
+```
+
+**Salida:**
+```
+============================================================
+   📋 TESTS GENERADOS
+============================================================
+
+✅ Se encontraron 5 tests:
+
+ 1. test_saucedemo_com_generated.py
+    Tamaño: 1247 bytes
+    Ruta: tests/test_saucedemo_com_generated.py
+
+ 2. test_dashboard_auth.py
+    Tamaño: 2134 bytes
+    Ruta: tests/test_dashboard_auth.py
+
+...
+
+💡 Para ejecutar todos:
+   python -m pytest tests -v
+```
+
+---
+
+**Ejecutar todos los tests:**
+```bash
+# Ejecución básica
 python cli.py run
 
-# Ejecutar con verbose
+# Con verbose
 python cli.py run --verbose
 ```
 
@@ -173,11 +409,13 @@ python cli.py run --verbose
 
 ### **Escenario 1: Nueva Feature**
 ```bash
-# PM te asigna nueva feature
+# 1. Explora la nueva página
+python cli.py explore https://tu-app.com/nueva-feature
+
+# 2. Genera tests automáticamente
 python cli.py generate https://tu-app.com/nueva-feature
 
-# Claude genera 3-5 tests automáticamente
-# Revisas, ajustas si necesario, ejecutas
+# 3. Ejecuta
 python -m pytest tests/test_nueva_feature.py -v
 ```
 
@@ -185,18 +423,44 @@ python -m pytest tests/test_nueva_feature.py -v
 
 ---
 
-### **Escenario 2: Después de Deploy**
+### **Escenario 2: Testing Post-Login**
+```bash
+# 1. Configura credenciales (una sola vez)
+cat >> auth.yaml << EOF
+mi-app:
+  login_url: https://mi-app.com/login
+  username: testuser
+  password: testpass
+  username_selector: "#email"
+  password_selector: "#password"
+  submit_selector: "button[type='submit']"
+EOF
+
+# 2. Explora dashboard
+python cli.py explore-auth https://mi-app.com/dashboard -s mi-app
+
+# 3. Genera tests interactivamente
+python cli.py generate-auth https://mi-app.com/dashboard -s mi-app --interactive
+```
+
+**Tiempo:** 5-10 minutos vs 45-60 minutos manual
+
+---
+
+### **Escenario 3: Después de Deploy**
 ```bash
 # Frontend cambió selectores
 # 10 tests fallando
 
-# Auto-heal en batch
-for test in test1 test2 test3; do
-    python cli.py heal tests/$test.py --dry-run
-    python cli.py heal tests/$test.py
-done
+# 1. Preview cambios
+python cli.py heal tests/test_login.py --dry-run
+python cli.py heal tests/test_checkout.py --dry-run
 
-# Re-ejecutar
+# 2. Aplicar reparaciones
+python cli.py heal tests/test_login.py
+python cli.py heal tests/test_checkout.py
+
+# 3. Re-ejecutar
 python cli.py run
 ```
 
@@ -204,17 +468,24 @@ python cli.py run
 
 ---
 
-### **Escenario 3: Exploración de Sitio Desconocido**
+### **Escenario 4: Suite Completa para Nueva App**
 ```bash
-# Necesitas testear sitio que no conoces
-python cli.py explore https://sitio-desconocido.com --show-details
+# 1. Generar test de login
+python cli.py generate https://nueva-app.com/login \
+    --description "login exitoso"
 
-# Vez estructura completa en 2 minutos
-# Generas suite de tests
-python cli.py generate https://sitio-desconocido.com
+# 2. Agregar credenciales a auth.yaml
+
+# 3. Generar tests para resto de la app
+python cli.py generate-auth https://nueva-app.com/dashboard -s nueva-app
+python cli.py generate-auth https://nueva-app.com/profile -s nueva-app
+python cli.py generate-auth https://nueva-app.com/settings -s nueva-app
+
+# 4. Ejecutar suite completa
+python cli.py run --verbose
 ```
 
-**Tiempo:** 5 minutos vs 20-30 minutos de exploración manual
+**Tiempo:** 20-30 minutos vs 4-6 horas manual
 
 ---
 
@@ -226,16 +497,17 @@ python cli.py generate https://sitio-desconocido.com
        │
        ▼
 ┌─────────────┐
-│   CLI       │ ← 6 comandos
+│   CLI       │ ← 8 comandos
 └──────┬──────┘
        │
-       ├──────────────────┬─────────────────┐
-       ▼                  ▼                 ▼
-┌─────────────┐    ┌─────────────┐  ┌─────────────┐
-│  Explorer   │    │  Generator  │  │ Auto-Healer │
-└──────┬──────┘    └──────┬──────┘  └──────┬──────┘
-       │                  │                 │
-       └──────────────────┴─────────────────┘
+       ├──────────────────┬─────────────────┬──────────────┐
+       ▼                  ▼                 ▼              ▼
+┌─────────────┐    ┌─────────────┐  ┌─────────────┐ ┌──────────┐
+│  Explorer   │    │  Generator  │  │ Auto-Healer │ │ Auth     │
+│             │    │             │  │             │ │ Config   │
+└──────┬──────┘    └──────┬──────┘  └──────┬──────┘ └────┬─────┘
+       │                  │                 │             │
+       └──────────────────┴─────────────────┴─────────────┘
                           │
                           ▼
                    ┌─────────────┐
@@ -264,21 +536,24 @@ python cli.py generate https://sitio-desconocido.com
 
 Tiempo por test: 15-30 minutos
 Tasa de error: ~20% (selectores incorrectos)
+Páginas con login: Requiere setup manual complejo
 ```
 
 ### **Con AI Test Explorer:**
 ```
-1. python cli.py generate <url>
-2. Revisar código generado
+1. python cli.py generate-auth <url> -s <sitio> --interactive
+2. Conversar con Claude sobre qué testear
 3. Ejecutar
 
 Tiempo por test: 2-5 minutos
 Tasa de error: ~5% (selectores verificados)
 Auto-healing: Sí
+Páginas con login: Manejo automático
 ```
 
 **Ahorro: 80-90% de tiempo**  
-**Mejora en precisión: 75%**
+**Mejora en precisión: 75%**  
+**Soporte para autenticación: ✅**
 
 ---
 
@@ -289,29 +564,59 @@ Auto-healing: Sí
 - **[MCP](https://modelcontextprotocol.io/)** - Model Context Protocol
 - **[Click](https://click.palletsprojects.com/)** - CLI framework
 - **[Pytest](https://pytest.org/)** - Testing framework
+- **[PyYAML](https://pyyaml.org/)** - Configuración de autenticación
 
 ---
 
 ## 📁 Estructura del Proyecto
 ```
 ai-test-explorer/
-├── cli.py                  # CLI principal
+├── cli.py                      # CLI principal (8 comandos)
 ├── src/
 │   ├── ai_test_generator.py   # Generador de tests
 │   ├── auto_healer.py          # Sistema de auto-reparación
+│   ├── auth_config.py          # Manejo de autenticación
 │   └── __init__.py
 ├── tests/
 │   ├── conftest.py            # Fixtures compartidas
 │   └── test_*.py              # Tests generados
+├── auth.yaml                  # Credenciales (no subir a Git)
 ├── screenshots/               # Screenshots de tests
 ├── pytest.ini                 # Configuración de Pytest
 ├── requirements.txt
+├── LICENSE
+├── EXAMPLES.md               # Ejemplos detallados
 └── README.md
 ```
 
 ---
 
 ## ⚙️ Configuración
+
+### `auth.yaml`
+
+Configuración de credenciales para exploración autenticada:
+```yaml
+saucedemo:
+  login_url: https://www.saucedemo.com
+  username: standard_user
+  password: secret_sauce
+  username_selector: "#user-name"
+  password_selector: "#password"
+  submit_selector: "#login-button"
+
+mi-app:
+  login_url: https://mi-app.com/login
+  username: admin
+  password: admin123
+  username_selector: "#email"
+  password_selector: "#pwd"
+  submit_selector: "button[type='submit']"
+```
+
+**⚠️ Importante:** Agregar `auth.yaml` a `.gitignore` para no subir credenciales.
+
+---
 
 ### `pytest.ini`
 ```ini
@@ -321,31 +626,11 @@ pythonpath = .
 testpaths = tests
 ```
 
+---
+
 ### `conftest.py`
+
 Fixtures globales de Playwright disponibles automáticamente en todos los tests.
-
----
-
-## 🤝 Contribuir
-
-¿Ideas para mejorar? ¡Pull requests bienvenidos!
-
-1. Fork el proyecto
-2. Crea tu feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit tus cambios (`git commit -m 'Add some AmazingFeature'`)
-4. Push al branch (`git push origin feature/AmazingFeature`)
-5. Abre un Pull Request
-
----
-
-## 📝 Roadmap
-
-- [ ] Soporte para otros navegadores (Firefox, Safari)
-- [ ] Integración con CI/CD
-- [ ] Dashboard web
-- [ ] Generación de reportes HTML
-- [ ] Soporte para mobile testing
-- [ ] Visual regression testing
 
 ---
 
@@ -359,17 +644,8 @@ MIT License - ve [LICENSE](LICENSE) para más detalles
 
 **Bryan Rodriguez**
 
-- LinkedIn: [tu-perfil](https://linkedin.com/in/tu-perfil)
-- GitHub: [@tu-usuario](https://github.com/tu-usuario)
-- Portfolio: [tu-portfolio.com](https://tu-portfolio.com)
-
----
-
-## 🙏 Agradecimientos
-
-- [Anthropic](https://www.anthropic.com/) por Claude AI
-- [Playwright](https://playwright.dev/) por la excelente herramienta de testing
-- Comunidad open source por las librerías utilizadas
+- LinkedIn: [bryan-rodriguez-32a9a8211](www.linkedin.com/in/bryan-rodriguez-32a9a8211)
+- GitHub: [bryan0422](https://github.com/bryan0422)
 
 ---
 
@@ -382,23 +658,3 @@ Si este proyecto te ayudó, considera darle una estrella ⭐
 <p align="center">
   Hecho con ❤️ y ☕ por Bryan Rodriguez
 </p>
-```
-
-**Guarda (Cmd+S)**
-
----
-
-## ✅ README COMPLETO
-
-**Ahora tienes un README profesional con:**
-```
-✅ Descripción clara
-✅ Badges
-✅ Instalación paso a paso
-✅ Ejemplos de uso
-✅ Casos de uso reales
-✅ Arquitectura
-✅ Comparación de valor
-✅ Estructura del proyecto
-✅ Roadmap
-✅ Sección de autor
